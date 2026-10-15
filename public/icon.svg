@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="128" fill="#0f172a"/>
+  <!-- Emergency Shield / Hexagon -->
+  <polygon points="256,64 420,150 420,330 256,448 92,330 92,150" fill="#1e293b" stroke="#dc2626" stroke-width="20" stroke-linejoin="round"/>
+  <!-- Pulse / Assessment waves -->
+  <circle cx="256" cy="256" r="110" stroke="#f87171" stroke-width="12" stroke-dasharray="20 12" opacity="0.6"/>
+  <!-- EDAN Marker / Clipboard / Cross-hair Symbol (non-official) -->
+  <path d="M256 160 V352 M160 256 H352" stroke="#ef4444" stroke-width="36" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="28" fill="#ffffff"/>
+  <circle cx="256" cy="256" r="14" fill="#dc2626"/>
+  <!-- Status indicators -->
+  <circle cx="390" cy="170" r="14" fill="#22c55e"/>
+</svg>
