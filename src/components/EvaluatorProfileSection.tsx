@@ -93,36 +93,36 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
   };
 
   return (
-    <div className="space-y-6 pb-12 max-w-5xl mx-auto w-full">
+    <div className="space-y-6 pb-12 max-w-5xl mx-auto w-full transition-colors duration-150">
       {/* Banner / Header with Screen Adaptor Quick Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-red-950/60 border border-slate-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-red-700/80 border border-red-500/80 flex items-center justify-center text-white shadow-lg shadow-red-900/40 shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/60 border border-red-200 dark:border-red-700/80 flex items-center justify-center text-red-600 dark:text-white shadow-sm shrink-0">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-white tracking-wide flex items-center gap-2">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-wide flex items-center gap-2">
               Perfil Oficial del Evaluador EDAN
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Configuración y credencial de brigadista para firma técnica de reportes y enlace de campo
             </p>
           </div>
         </div>
 
         {/* Screen Adapter Widget (Tablet, Smartphone, PC) */}
-        <div className="flex items-center gap-2 bg-slate-950/90 p-1.5 rounded-xl border border-slate-700 shadow-lg">
-          <span className="text-[11px] font-bold text-slate-300 px-2 flex items-center gap-1.5">
-            <Sliders className="w-3.5 h-3.5 text-red-400" />
-            <span className="hidden sm:inline">Adaptador de Pantalla:</span>
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/90 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 px-2 flex items-center gap-1.5">
+            <Sliders className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+            <span className="hidden sm:inline">Adaptador:</span>
           </span>
           <button
             type="button"
             onClick={() => onSetDeviceViewMode('mobile')}
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
               deviceViewMode === 'mobile'
-                ? 'bg-red-700 text-white shadow-md'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-red-700 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
             }`}
             title="Vista compacta Smartphone (380px)"
           >
@@ -134,8 +134,8 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
             onClick={() => onSetDeviceViewMode('tablet')}
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
               deviceViewMode === 'tablet'
-                ? 'bg-red-700 text-white shadow-md'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-red-700 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
             }`}
             title="Vista media Tablet (768px)"
           >
@@ -147,8 +147,8 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
             onClick={() => onSetDeviceViewMode('desktop')}
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
               deviceViewMode === 'desktop'
-                ? 'bg-red-700 text-white shadow-md'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-red-700 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
             }`}
             title="Vista completa PC / Escritorio (1024px+)"
           >
@@ -160,8 +160,8 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
             onClick={() => onSetDeviceViewMode('auto')}
             className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition ${
               deviceViewMode === 'auto'
-                ? 'bg-slate-700 text-white'
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-slate-800 text-white dark:bg-slate-700'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
             }`}
             title="Ajuste 100% automático al ancho del dispositivo"
           >
@@ -172,19 +172,19 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Main Dedicated Form - Clear, full-width, non-modal layout */}
-        <div className="lg:col-span-2 rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-7 shadow-xl">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+        <div className="lg:col-span-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-7 shadow-sm dark:shadow-xl">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 mb-6">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <FileCheck2 className="w-5 h-5 text-red-500" />
-                Datos de Identificación del Brigadista
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileCheck2 className="w-5 h-5 text-red-600 dark:text-red-500" />
+                <span>Datos de Identificación del Brigadista</span>
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Todos los datos se reflejarán automáticamente en el membrete y las firmas de los informes PDF
               </p>
             </div>
             {savedSuccess && (
-              <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold bg-emerald-950/80 border border-emerald-700/60 px-3 py-1 rounded-xl animate-bounce">
+              <span className="flex items-center gap-1.5 text-xs text-emerald-800 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 px-3 py-1 rounded-xl animate-bounce">
                 <CheckCircle2 className="w-4 h-4" />
                 ¡Perfil guardado!
               </span>
@@ -192,13 +192,13 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
           </div>
 
           {/* Quick Evaluator Brigade Selector for Simultaneous Multi-User Field Operation */}
-          <div className="mb-6 p-4 rounded-xl bg-slate-950/70 border border-slate-800">
+          <div className="mb-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-orange-400" />
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
                 <span>Cambiar Rápidamente de Evaluador en Campo (Operación Simultánea):</span>
               </span>
-              <span className="text-[10px] text-slate-400">4 Brigadas Activas</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">4 Brigadas Activas</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {PRECONFIGURED_EVALUATORS.map((ev) => {
@@ -217,20 +217,20 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
                       setSavedSuccess(true);
                       setTimeout(() => setSavedSuccess(false), 2000);
                     }}
-                    className={`p-2 rounded-lg text-left border transition text-xs flex flex-col justify-between ${
+                    className={`p-2.5 rounded-xl text-left border transition text-xs flex flex-col justify-between ${
                       isActive
-                        ? 'bg-red-950/80 border-red-500 text-white shadow-sm ring-1 ring-red-500'
-                        : 'bg-slate-900 border-slate-750 text-slate-300 hover:border-slate-600 hover:text-white'
+                        ? 'bg-red-50 dark:bg-red-950/80 border-red-500 text-slate-900 dark:text-white shadow-sm ring-1 ring-red-500'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-750 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     <div className="font-bold text-[11px] truncate">{ev.name.split(' ')[0]} {ev.name.split(' ')[1] || ''}</div>
-                    <div className="font-mono text-[9px] text-red-400 truncate">{ev.radioCallsign}</div>
-                    <div className="text-[9px] text-slate-400 truncate">{ev.role}</div>
+                    <div className="font-mono text-[9px] text-red-600 dark:text-red-400 truncate">{ev.radioCallsign}</div>
+                    <div className="text-[9px] text-slate-500 dark:text-slate-400 truncate">{ev.role}</div>
                   </button>
                 );
               })}
             </div>
-            <p className="text-[10px] text-slate-400 mt-2">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">
               Varios evaluadores pueden usar la app simultáneamente desde sus dispositivos para verificar distintos puntos del desastre y sincronizar todos los datos en el concentrado central.
             </p>
           </div>
@@ -238,15 +238,15 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Nombre Completo */}
             <div>
-              <label className="block text-xs font-bold text-slate-200 mb-1.5">
-                Nombre Completo del Evaluador: <span className="text-red-400">*</span>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                Nombre Completo del Evaluador: <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={evalName}
                   onChange={(e) => setEvalName(e.target.value)}
-                  className="w-full bg-slate-800/90 border border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 font-medium"
+                  className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium"
                   placeholder="Ej. TSU Roberto Méndez Cruz"
                   required
                 />
@@ -259,91 +259,86 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
             {/* Credencial & Rol Operativo */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-red-400" />
-                  <span>Credencial / Matrícula Oficial: <span className="text-red-400">*</span></span>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                  Número de Credencial / Registro: <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={evalCredential}
                   onChange={(e) => setEvalCredential(e.target.value)}
-                  className="w-full bg-slate-800/90 border border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-white font-mono"
-                  placeholder="CRM-JAL-TEPA-4421"
+                  className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-mono"
+                  placeholder="Ej. CRM-JAL-TEPA-4421"
                   required
                 />
-                <p className="text-[11px] text-slate-500 mt-1">Número de acreditación de Protección Civil o Cruz Roja.</p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1.5">
-                  Rol Operativo en la Contingencia:
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                  Rol Operativo en el Desastre: <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={evalRole}
-                  onChange={(e) => setEvalRole(e.target.value as any)}
-                  className="w-full bg-slate-800/90 border border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-white font-medium"
+                  onChange={(e) => setEvalRole(e.target.value as EvaluatorProfile['role'])}
+                  className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-medium"
                 >
-                  <option value="Evaluador de Campo">Evaluador de Campo (Técnico EDAN)</option>
-                  <option value="Coordinador EDAN">Coordinador Operativo EDAN</option>
-                  <option value="Logística y Suministros">Logística y Suministros (WASH/Insumos)</option>
-                  <option value="Enlace Operativo">Enlace Operativo / PMU</option>
+                  <option value="Evaluador de Campo">Evaluador de Campo</option>
+                  <option value="Coordinador EDAN">Coordinador EDAN</option>
+                  <option value="Enlace Operativo">Enlace Operativo</option>
+                  <option value="Logística y Suministros">Logística y Suministros</option>
                 </select>
-                <p className="text-[11px] text-slate-500 mt-1">Nivel de intervención asignado en la respuesta.</p>
               </div>
             </div>
 
-            {/* Clave Radio & Teléfono */}
+            {/* Indicativo de Radio & Teléfono */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1.5">
-                  <Radio className="w-3.5 h-3.5 text-red-400" />
-                  <span>Clave de Radio / Callsign: <span className="text-red-400">*</span></span>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                  Indicativo de Radio (Callsign VHF/UHF):
                 </label>
-                <input
-                  type="text"
-                  value={evalCallsign}
-                  onChange={(e) => setEvalCallsign(e.target.value)}
-                  className="w-full bg-slate-800/90 border border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-white font-mono"
-                  placeholder="Alpha-Tepa-1 / Unidad-12"
-                  required
-                />
-                <p className="text-[11px] text-slate-500 mt-1">Identificador en la red de comunicaciones VHF/UHF.</p>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={evalCallsign}
+                    onChange={(e) => setEvalCallsign(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-slate-900 dark:text-white font-mono"
+                    placeholder="Ej. Alpha-Tepa-1"
+                  />
+                  <Radio className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-red-400" />
-                  <span>Teléfono en Campo:</span>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                  Teléfono de Contacto en Terreno:
                 </label>
-                <input
-                  type="tel"
-                  value={evalPhone}
-                  onChange={(e) => setEvalPhone(e.target.value)}
-                  className="w-full bg-slate-800/90 border border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl px-3.5 py-2.5 text-sm text-white"
-                  placeholder="378-782-1100"
-                />
-                <p className="text-[11px] text-slate-500 mt-1">Línea directa para enlaces de emergencia o WhatsApp.</p>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    value={evalPhone}
+                    onChange={(e) => setEvalPhone(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 focus:outline-none rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-slate-900 dark:text-white"
+                    placeholder="Ej. 378-782-1100"
+                  />
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                </div>
               </div>
             </div>
 
-            {/* Contingencia Asignada (Read-only reference) */}
-            <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Building className="w-4 h-4 text-red-400 shrink-0" />
-                <div>
-                  <span className="text-slate-400">Puesto de Mando Unificado: </span>
-                  <strong className="text-white">{contingency.commandPostLocation?.name || 'Cruz Roja Tepatitlán'}</strong>
-                </div>
+            {/* Institución / Delegación Read-only indicator */}
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <span>Institución: <strong>Cruz Roja Mexicana Delegación Tepatitlán de Morelos</strong></span>
               </div>
               {contingency.commandPostLocation && (
-                <span className="font-mono text-[11px] text-slate-400 hidden sm:inline">
+                <span className="font-mono text-[11px] text-slate-500 hidden sm:inline">
                   {contingency.commandPostLocation.lat.toFixed(4)}, {contingency.commandPostLocation.lng.toFixed(4)}
                 </span>
               )}
             </div>
 
             {/* Actions */}
-            <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-3">
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-3">
               <button
                 type="submit"
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-700 hover:bg-red-600 text-white font-bold text-sm shadow-lg shadow-red-900/40 transition active:scale-95"
@@ -358,7 +353,7 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
         {/* Credential Card Live Preview & Screen Adapter Explainer */}
         <div className="space-y-5">
           {/* Visual Digital Credential Card */}
-          <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-red-950 border border-slate-700/80 p-5 shadow-2xl relative overflow-hidden">
+          <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-red-950 border border-slate-700/80 p-5 shadow-2xl relative overflow-hidden text-white">
             <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-red-600/10 blur-2xl pointer-events-none" />
 
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
@@ -414,12 +409,12 @@ export const EvaluatorProfileSection: React.FC<EvaluatorProfileSectionProps> = (
           </div>
 
           {/* Screen Adaptor Guide Box */}
-          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-4 space-y-2 text-xs text-slate-300">
-            <div className="font-bold text-white flex items-center gap-2">
-              <Maximize2 className="w-4 h-4 text-sky-400" />
+          <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 space-y-2 text-xs text-slate-700 dark:text-slate-300 shadow-sm">
+            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Maximize2 className="w-4 h-4 text-sky-600 dark:text-sky-400" />
               <span>Adaptador de Pantalla Operativo</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
               Puedes alternar entre los modos <strong>Móvil</strong>, <strong>Tablet</strong>, <strong>PC</strong> o <strong>Automático</strong> en cualquier momento. Esto simula y ajusta los contenedores y tamaños de letra para que ningún campo quede oculto ni recortado en pantallas pequeñas o grandes.
             </p>
           </div>

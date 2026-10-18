@@ -79,16 +79,44 @@ export async function initializeStorage(): Promise<void> {
   const existingContingency = await db.get('contingencies', INITIAL_CONTINGENCY.id);
   if (!existingContingency) {
     await db.put('contingencies', INITIAL_CONTINGENCY);
+  }
 
-    const tx = db.transaction(['assessments', 'routes'], 'readwrite');
-    for (const item of INITIAL_ASSESSMENTS) {
-      await tx.objectStore('assessments').put(item);
-    }
-    for (const route of INITIAL_ROUTES) {
-      await tx.objectStore('routes').put(route);
+  // Purge any legacy practice / mock assessments from initial seeds so the app starts 100% clean
+  const legacySeedIds = [
+    'EDAN-TEPA-001',
+    'EDAN-TEPA-002',
+    'EDAN-TEPA-003',
+    'EDAN-TEPA-004',
+    'EDAN-TEPA-005',
+  ];
+  const legacyRouteIds = ['ROUTE-TEPA-01', 'ROUTE-TEPA-02', 'ROUTE-TEPA-03'];
+
+  const allAssess = await db.getAll('assessments');
+  if (allAssess.length > 0) {
+    const tx = db.transaction('assessments', 'readwrite');
+    for (const a of allAssess) {
+      if (
+        legacySeedIds.includes(a.id) ||
+        a.folio === 'EDAN-TEPA-2026-001' ||
+        a.folio === 'EDAN-TEPA-2026-002' ||
+        a.folio === 'EDAN-TEPA-2026-003' ||
+        a.folio === 'EDAN-TEPA-2026-004' ||
+        a.folio === 'EDAN-TEPA-2026-005'
+      ) {
+        await tx.store.delete(a.id);
+      }
     }
     await tx.done;
   }
+
+  const txRoutes = db.transaction('routes', 'readwrite');
+  for (const rId of legacyRouteIds) {
+    const item = await txRoutes.store.get(rId);
+    if (item) {
+      await txRoutes.store.delete(rId);
+    }
+  }
+  await txRoutes.done;
 }
 
 /**

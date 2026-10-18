@@ -12,6 +12,7 @@ import {
   NeedItem,
   NeedStatus,
 } from './types/edan';
+import { ThemeMode } from './types/theme';
 import {
   initializeStorage,
   getAllAssessments,
@@ -28,7 +29,6 @@ import {
 import { syncService } from './services/syncService';
 import { TopNav, AppTabType, DeviceViewMode } from './components/TopNav';
 import { OfflineBanner } from './components/OfflineBanner';
-import { EDANGoogleMap } from './components/EDANGoogleMap';
 import { AssessmentsList } from './components/AssessmentsList';
 import { AssessmentForm } from './components/AssessmentForm';
 import { NeedsAnalysis } from './components/NeedsAnalysis';
@@ -38,7 +38,7 @@ import { BackupManager } from './components/BackupManager';
 import { EvaluatorProfileSection } from './components/EvaluatorProfileSection';
 import { MovementMatrixVisualizer } from './components/MovementMatrixVisualizer';
 import { INITIAL_CONTINGENCY } from './data/initialData';
-import { Plus, MapPin, FileText, Package, Navigation, AlertCircle, Activity, Users } from 'lucide-react';
+import { Plus, FileText, Package, Navigation, AlertCircle, Activity, Users } from 'lucide-react';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -54,8 +54,34 @@ export default function App() {
     role: 'Evaluador de Campo',
   });
 
-  // UI Navigation states
-  const [currentTab, setCurrentTab] = useState<AppTabType>('map');
+  // Theme state: 'dark' (default/emergency) or 'light' (tema blanco)
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('edan_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    }
+    return 'dark';
+  });
+
+  // Apply theme to <html> element
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'light') {
+      root.classList.remove('dark');
+      root.classList.add('light');
+    } else {
+      root.classList.remove('light');
+      root.classList.add('dark');
+    }
+    localStorage.setItem('edan_theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // UI Navigation states - Default tab is 'assessments'
+  const [currentTab, setCurrentTab] = useState<AppTabType>('assessments');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState<DamageAssessment | null>(null);
   const [pdfModalAssessment, setPdfModalAssessment] = useState<DamageAssessment | null>(null);
@@ -68,7 +94,6 @@ export default function App() {
   const [isOnline, setIsOnline] = useState<boolean>(syncService.isOnline());
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
   const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
-  const [gmpQuotaExceeded, setGmpQuotaExceeded] = useState(false);
 
   // Load Initial Data
   const loadData = useCallback(async () => {
@@ -116,25 +141,23 @@ export default function App() {
     };
 
     const handleRoutesChanged = () => {
-      getAllRoutes().then(setRoutes);
+      getAllRoutes().then((list) => {
+        setRoutes(list);
+      });
     };
 
-    const handleContingencyChanged = (e?: any) => {
-      if (e?.detail) {
-        setContingency(e.detail);
-      } else {
-        getActiveContingency().then(setContingency);
-      }
+    const handleContingencyChanged = (e: any) => {
+      if (e.detail) setContingency(e.detail);
     };
 
-    const handleQuotaExceeded = () => {
-      setGmpQuotaExceeded(true);
+    const handleEvaluatorChanged = (e: any) => {
+      if (e.detail) setCurrentEvaluator(e.detail);
     };
 
     window.addEventListener('edan-assessments-changed', handleAssessmentsChanged);
     window.addEventListener('edan-routes-changed', handleRoutesChanged);
     window.addEventListener('edan-contingency-changed', handleContingencyChanged);
-    window.addEventListener('gmp-quota-exceeded', handleQuotaExceeded);
+    window.addEventListener('edan-evaluator-changed', handleEvaluatorChanged);
 
     return () => {
       unsubOnline();
@@ -142,138 +165,132 @@ export default function App() {
       window.removeEventListener('edan-assessments-changed', handleAssessmentsChanged);
       window.removeEventListener('edan-routes-changed', handleRoutesChanged);
       window.removeEventListener('edan-contingency-changed', handleContingencyChanged);
-      window.removeEventListener('gmp-quota-exceeded', handleQuotaExceeded);
+      window.removeEventListener('edan-evaluator-changed', handleEvaluatorChanged);
     };
   }, [loadData]);
 
-  // Periodic team location presence ping when online
-  useEffect(() => {
-    if (isOnline && navigator.geolocation) {
-      const ping = () => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            syncService.pingPresence({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-            });
-          },
-          () => syncService.pingPresence()
-        );
-      };
-      ping();
-      const interval = setInterval(ping, 60000); // every 1 min
-      return () => clearInterval(interval);
-    }
-  }, [isOnline]);
-
-  // Actions
+  // Handle Save Assessment
   const handleSaveAssessment = async (assessment: DamageAssessment) => {
-    await saveAssessmentLocal(assessment, isOnline);
-    if (isOnline) {
-      await syncService.sendAssessmentToServer(assessment);
-    }
-    setIsFormOpen(false);
-    setEditingAssessment(null);
-    const updated = await getAllAssessments();
-    setAssessments(updated);
-  };
-
-  const handleDeleteAssessment = async (id: string) => {
-    await deleteAssessmentLocal(id, isOnline);
-    if (isOnline) {
-      await syncService.deleteAssessmentFromServer(id);
-    }
-    const updated = await getAllAssessments();
-    setAssessments(updated);
-  };
-
-  const handleUpdateNeedStatus = async (
-    needId: string,
-    status: NeedStatus,
-    deliveredCount?: number
-  ) => {
-    await updateNeedStatusLocal(needId, status, deliveredCount, isOnline);
-    const updated = await getAllAssessments();
-    setAssessments(updated);
-  };
-
-  const handleAddNewNeed = async (assessmentId: string, need: NeedItem) => {
-    const assess = assessments.find((a) => a.id === assessmentId);
-    if (assess) {
-      const updatedAssess: DamageAssessment = {
-        ...assess,
-        needs: [...assess.needs, need],
-        updatedAt: new Date().toISOString(),
-      };
-      await saveAssessmentLocal(updatedAssess, isOnline);
-      if (isOnline) {
-        await syncService.sendAssessmentToServer(updatedAssess);
-      }
+    try {
+      await saveAssessmentLocal(assessment, isOnline);
       const updated = await getAllAssessments();
       setAssessments(updated);
+      setIsFormOpen(false);
+      setEditingAssessment(null);
+      setCurrentTab('assessments');
+    } catch (err) {
+      console.error('[Save Assessment Error]', err);
     }
   };
 
-  const handleUpdateRoute = async (route: InspectionRoute) => {
-    await saveRouteLocal(route);
-    const updated = await getAllRoutes();
-    setRoutes(updated);
-  };
-
-  const handleUpdateEvaluator = async (profile: EvaluatorProfile) => {
-    setCurrentEvaluator(profile);
-    await saveStoredEvaluatorProfile(profile);
-  };
-
-  const handleUpdateContingency = async (updated: ContingencyEvent) => {
-    await saveContingency(updated);
-    setContingency(updated);
-    if (isOnline) {
-      try {
-        await fetch('/api/contingency', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updated),
-        });
-      } catch (err) {
-        console.warn('[Sync Contingency failed]', err);
+  // Handle Permanent Delete Assessment
+  const handleDeleteAssessment = async (id: string) => {
+    try {
+      await deleteAssessmentLocal(id, isOnline);
+      const updated = await getAllAssessments();
+      setAssessments(updated);
+      if (selectedMapAssessmentId === id) {
+        setSelectedMapAssessmentId(null);
       }
+    } catch (err) {
+      console.error('[Delete Assessment Error]', err);
     }
   };
 
-  const handleForceSync = async () => {
-    await syncService.syncPendingQueue();
-    const updated = await getAllAssessments();
-    setAssessments(updated);
+  // Handle Update Contingency
+  const handleUpdateContingency = async (updated: ContingencyEvent) => {
+    try {
+      await saveContingency(updated);
+      setContingency(updated);
+    } catch (err) {
+      console.error('[Update Contingency Error]', err);
+    }
   };
 
-  const handleSelectOnMap = (item: DamageAssessment) => {
-    setSelectedMapAssessmentId(item.id);
-    setCurrentTab('map');
+  // Handle Update Evaluator
+  const handleUpdateEvaluator = async (updatedProfile: EvaluatorProfile) => {
+    try {
+      await saveStoredEvaluatorProfile(updatedProfile);
+      setCurrentEvaluator(updatedProfile);
+    } catch (err) {
+      console.error('[Update Evaluator Error]', err);
+    }
+  };
+
+  // Handle Update Need Status
+  const handleUpdateNeedStatus = async (
+    needId: string,
+    newStatus: NeedStatus,
+    deliveredCount?: number
+  ) => {
+    try {
+      await updateNeedStatusLocal(needId, newStatus, deliveredCount, isOnline);
+      const updated = await getAllAssessments();
+      setAssessments(updated);
+    } catch (err) {
+      console.error('[Update Need Status Error]', err);
+    }
+  };
+
+  // Handle Add New Need from Needs Analysis view
+  const handleAddNewNeed = async (assessmentId: string, newNeed: NeedItem) => {
+    try {
+      const match = assessments.find((a) => a.id === assessmentId);
+      if (match) {
+        const updatedNeeds = [...(match.needs || []), newNeed];
+        const updatedAssessment = {
+          ...match,
+          needs: updatedNeeds,
+        };
+        await saveAssessmentLocal(updatedAssessment, isOnline);
+        const updated = await getAllAssessments();
+        setAssessments(updated);
+      }
+    } catch (err) {
+      console.error('[Add Need Error]', err);
+    }
+  };
+
+  // Handle Save Route
+  const handleUpdateRoute = async (route: InspectionRoute) => {
+    try {
+      await saveRouteLocal(route);
+      const updated = await getAllRoutes();
+      setRoutes(updated);
+    } catch (err) {
+      console.error('[Update Route Error]', err);
+    }
+  };
+
+  // Handle Force Manual Sync
+  const handleForceSync = async () => {
+    if (!isOnline) return;
+    await syncService.syncPendingQueue();
+    await loadData();
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-slate-100">
-        <div className="w-12 h-12 rounded-2xl bg-red-700 flex items-center justify-center font-black text-xl text-white animate-pulse shadow-xl shadow-red-900/50 mb-4">
-          EDAN
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4 transition-colors duration-150">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+            Iniciando EDAN Tepatitlán...
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Cargando base de datos técnica y sincronizando módulos de respuesta.
+          </p>
         </div>
-        <h2 className="text-sm font-bold text-slate-200">Iniciando Sistema EDAN Tepatitlán...</h2>
-        <p className="text-xs text-slate-500 mt-1">Cargando base de datos local y estado offline</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-red-600 selection:text-white">
-      {/* Top Header Bar */}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-150">
+      {/* Top Application Header Navigation */}
       <TopNav
         currentTab={currentTab}
-        onSelectTab={(tab) => {
-          setIsFormOpen(false);
-          setEditingAssessment(null);
-          setCurrentTab(tab);
-        }}
+        onSelectTab={setCurrentTab}
         isOnline={isOnline}
         syncStatus={syncStatus}
         pendingMutationsCount={pendingSyncCount}
@@ -283,27 +300,11 @@ export default function App() {
         contingency={contingency}
         deviceViewMode={deviceViewMode}
         onSetDeviceViewMode={setDeviceViewMode}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
-      {/* Google Maps Quota Warning Banner (if applicable) */}
-      {gmpQuotaExceeded && (
-        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
-          <span>
-            Google Maps Platform quota reached. If you are the app owner, visit{' '}
-            <a
-              href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline font-semibold text-amber-950 hover:text-amber-800"
-            >
-              maps developer site
-            </a>{' '}
-            for instructions to update your account.
-          </span>
-        </div>
-      )}
-
-      {/* Offline Connectivity Notification Banner */}
+      {/* Offline Alert Banner */}
       <OfflineBanner
         isOnline={isOnline}
         pendingCount={pendingSyncCount}
@@ -313,16 +314,16 @@ export default function App() {
 
       {/* Screen Adaptor Notification Bar if non-auto */}
       {deviceViewMode !== 'auto' && (
-        <div className="bg-slate-900 border-b border-slate-800 text-slate-300 px-4 py-1.5 text-xs flex items-center justify-between">
+        <div className="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 px-4 py-1.5 text-xs flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
             <span>
               Adaptador activo: Vista <strong>{deviceViewMode === 'mobile' ? 'Smartphone (390px)' : deviceViewMode === 'tablet' ? 'Tablet (768px)' : 'PC (1100px)'}</strong>
             </span>
           </span>
           <button
             onClick={() => setDeviceViewMode('auto')}
-            className="text-[11px] text-red-400 hover:text-red-300 font-bold underline"
+            className="text-[11px] text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold underline"
           >
             Restablecer a pantalla completa (Auto)
           </button>
@@ -333,9 +334,9 @@ export default function App() {
       <main
         className={`flex-1 w-full mx-auto p-3 sm:p-5 flex flex-col transition-all duration-300 ${
           deviceViewMode === 'mobile'
-            ? 'max-w-[400px] border-x border-slate-800/80 shadow-2xl bg-slate-950'
+            ? 'max-w-[400px] border-x border-slate-200 dark:border-slate-800/80 shadow-2xl bg-white dark:bg-slate-950'
             : deviceViewMode === 'tablet'
-            ? 'max-w-[780px] border-x border-slate-800/80 shadow-2xl bg-slate-950'
+            ? 'max-w-[780px] border-x border-slate-200 dark:border-slate-800/80 shadow-2xl bg-white dark:bg-slate-950'
             : deviceViewMode === 'desktop'
             ? 'max-w-[1150px]'
             : 'max-w-7xl'
@@ -356,108 +357,7 @@ export default function App() {
           />
         ) : (
           <>
-            {/* Tab 1: Map View */}
-            {currentTab === 'map' && (
-              <div className="flex-1 flex flex-col space-y-4">
-                {/* Quick Map Action Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 shadow-md">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-red-900/40 border border-red-700/60">
-                      <MapPin className="w-5 h-5 text-red-400" />
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-bold text-white">
-                        Mapeo Operativo de Campo y Trazabilidad - Tepatitlán de Morelos
-                      </h2>
-                      <p className="text-[11px] text-slate-400">
-                        {assessments.length} afectaciones georreferenciadas &bull; Conexión directa a Google Maps
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setCurrentTab('matrix')}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-orange-400 border border-slate-700 transition"
-                      title="Ver los movimientos y avance cronológico en la matriz"
-                    >
-                      <Activity className="w-3.5 h-3.5" />
-                      <span>Ver Movimientos Matriz</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setEditingAssessment(null);
-                        setIsFormOpen(true);
-                      }}
-                      className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-xs font-bold text-white shadow-md shadow-red-900/30 transition active:scale-95"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>+ Nueva Evaluación</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Map Area */}
-                <div className="flex-1 min-h-[580px] h-[640px] rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
-                  <EDANGoogleMap
-                    assessments={assessments}
-                    contingency={contingency}
-                    onUpdateContingency={handleUpdateContingency}
-                    selectedAssessmentId={selectedMapAssessmentId}
-                    onSelectAssessment={(item) => {
-                      setPdfModalAssessment(item);
-                    }}
-                    onDeleteAssessment={handleDeleteAssessment}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Tab: Matrix & Sequential Site Movement Visualizer */}
-            {currentTab === 'matrix' && (
-              <div className="flex-1 space-y-5">
-                <MovementMatrixVisualizer
-                  assessments={assessments}
-                  selectedAssessmentId={selectedMapAssessmentId}
-                  onSelectAssessment={(item) => {
-                    setSelectedMapAssessmentId(item.id);
-                  }}
-                  onNavigateToMap={(item) => {
-                    setSelectedMapAssessmentId(item.id);
-                    setCurrentTab('map');
-                  }}
-                  onDeleteAssessment={handleDeleteAssessment}
-                />
-
-                {/* Inline Map preview below the Movement Matrix */}
-                <div className="rounded-2xl border border-slate-800 overflow-hidden shadow-xl min-h-[520px] h-[540px]">
-                  <EDANGoogleMap
-                    assessments={assessments}
-                    contingency={contingency}
-                    onUpdateContingency={handleUpdateContingency}
-                    selectedAssessmentId={selectedMapAssessmentId}
-                    onSelectAssessment={(item) => {
-                      setPdfModalAssessment(item);
-                    }}
-                    onDeleteAssessment={handleDeleteAssessment}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Tab: Dedicated Evaluator Profile Section */}
-            {currentTab === 'profile' && (
-              <EvaluatorProfileSection
-                currentEvaluator={currentEvaluator}
-                onUpdateEvaluator={handleUpdateEvaluator}
-                contingency={contingency}
-                deviceViewMode={deviceViewMode}
-                onSetDeviceViewMode={setDeviceViewMode}
-              />
-            )}
-
-            {/* Tab 2: Assessments List View */}
+            {/* Tab 1: Assessments List View (Primary view) */}
             {currentTab === 'assessments' && (
               <AssessmentsList
                 assessments={assessments}
@@ -471,11 +371,35 @@ export default function App() {
                 }}
                 onDeleteAssessment={handleDeleteAssessment}
                 onOpenPdf={(item) => setPdfModalAssessment(item)}
-                onSelectOnMap={handleSelectOnMap}
               />
             )}
 
-            {/* Tab 3: Needs Analysis View */}
+            {/* Tab 2: Matrix & Sequential Site Movement Visualizer */}
+            {currentTab === 'matrix' && (
+              <div className="flex-1 space-y-5">
+                <MovementMatrixVisualizer
+                  assessments={assessments}
+                  selectedAssessmentId={selectedMapAssessmentId}
+                  onSelectAssessment={(item) => {
+                    setSelectedMapAssessmentId(item.id);
+                  }}
+                  onDeleteAssessment={handleDeleteAssessment}
+                />
+              </div>
+            )}
+
+            {/* Tab 3: Dedicated Evaluator Profile Section */}
+            {currentTab === 'profile' && (
+              <EvaluatorProfileSection
+                currentEvaluator={currentEvaluator}
+                onUpdateEvaluator={handleUpdateEvaluator}
+                contingency={contingency}
+                deviceViewMode={deviceViewMode}
+                onSetDeviceViewMode={setDeviceViewMode}
+              />
+            )}
+
+            {/* Tab 4: Needs Analysis View */}
             {currentTab === 'needs' && (
               <NeedsAnalysis
                 assessments={assessments}
@@ -484,21 +408,17 @@ export default function App() {
               />
             )}
 
-            {/* Tab 4: Real-time Traceability View */}
+            {/* Tab 5: Real-time Traceability View */}
             {currentTab === 'routes' && (
               <RoutesTracker
                 assessments={assessments}
                 contingency={contingency}
                 onSelectAssessment={(item) => setPdfModalAssessment(item)}
-                onNavigateToMap={(item) => {
-                  setSelectedMapAssessmentId(item.id);
-                  setCurrentTab('map');
-                }}
                 onDeleteAssessment={handleDeleteAssessment}
               />
             )}
 
-            {/* Tab 5: Backup & Offline Transfer View */}
+            {/* Tab 6: Backup & Offline Transfer View */}
             {currentTab === 'backup' && (
               <BackupManager
                 assessmentsCount={assessments.length}

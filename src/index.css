@@ -1,5 +1,128 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 @import "leaflet/dist/leaflet.css";
+
+/* ========================================================= */
+/* TEMA BLANCO / OBSCURO - SYSTEM DESIGN TOKENS              */
+/* ========================================================= */
+
+html.light {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Smooth theme transition */
+body, header, main, div, button, input, select, textarea {
+  transition-property: background-color, border-color, color;
+  transition-duration: 100ms;
+}
+
+/* Light Mode Overrides for Core UI Containers */
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-slate-900,
+html.light .bg-slate-950,
+html.light .bg-slate-800,
+html.light .bg-slate-850 {
+  background-color: #ffffff;
+}
+
+html.light .bg-slate-800\/40,
+html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/90,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/70,
+html.light .bg-slate-950\/80,
+html.light .bg-slate-950\/90 {
+  background-color: #f8fafc;
+}
+
+html.light .border-slate-700,
+html.light .border-slate-800,
+html.light .border-slate-750,
+html.light .border-slate-700\/60,
+html.light .border-slate-700\/80,
+html.light .border-slate-800\/60,
+html.light .border-slate-800\/80 {
+  border-color: #e2e8f0;
+}
+
+/* Light Mode Form Elements */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Light Mode Text Legibility */
+html.light .text-white:not(.bg-red-700):not(.bg-red-600):not(.bg-blue-600):not(.bg-emerald-600):not(.bg-emerald-700):not(.bg-amber-600) {
+  color: #0f172a;
+}
+
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300 {
+  color: #1e293b;
+}
+
+html.light .text-slate-400 {
+  color: #64748b;
+}
+
+html.light .text-slate-500 {
+  color: #64748b;
+}
+
+/* Maintain bright emergency accents and badges in light mode */
+html.light .text-red-400,
+html.light .text-red-500 {
+  color: #dc2626;
+}
+
+html.light .text-amber-400 {
+  color: #d97706;
+}
+
+html.light .text-emerald-400 {
+  color: #059669;
+}
+
+html.light .text-sky-400 {
+  color: #0284c7;
+}
+
+html.light .text-orange-400 {
+  color: #ea580c;
+}
+
+/* Always preserve white text on saturated action buttons */
+html.light .bg-red-700,
+html.light .bg-red-600,
+html.light .bg-red-800,
+html.light .bg-blue-600,
+html.light .bg-blue-700,
+html.light .bg-emerald-600,
+html.light .bg-emerald-700,
+html.light .bg-amber-600 {
+  color: #ffffff !important;
+}
 
 /* Leaflet map custom emergency styling */
 .leaflet-container {

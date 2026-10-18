@@ -5,7 +5,6 @@ import {
   WifiOff,
   RefreshCw,
   Users,
-  MapPin,
   FileText,
   Navigation,
   Package,
@@ -22,11 +21,14 @@ import {
   Maximize2,
   Activity,
   Sliders,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { EvaluatorProfile, ContingencyEvent } from '../types/edan';
+import { ThemeMode } from '../types/theme';
 import { PWAInstallButton } from './PWAInstallButton';
 
-export type AppTabType = 'map' | 'assessments' | 'needs' | 'routes' | 'matrix' | 'profile' | 'backup';
+export type AppTabType = 'assessments' | 'matrix' | 'routes' | 'profile' | 'needs' | 'backup';
 export type DeviceViewMode = 'auto' | 'mobile' | 'tablet' | 'desktop';
 
 interface TopNavProps {
@@ -41,6 +43,8 @@ interface TopNavProps {
   contingency: ContingencyEvent;
   deviceViewMode: DeviceViewMode;
   onSetDeviceViewMode: (mode: DeviceViewMode) => void;
+  theme: ThemeMode;
+  onToggleTheme: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -55,11 +59,11 @@ export const TopNav: React.FC<TopNavProps> = ({
   contingency,
   deviceViewMode,
   onSetDeviceViewMode,
+  theme,
+  onToggleTheme,
 }) => {
-  const [showScreenModeMenu, setShowScreenModeMenu] = useState(false);
-
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 text-slate-100 shadow-xl">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-sm dark:shadow-xl transition-colors duration-150">
       {/* Upper Main Brand Bar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 sm:gap-3">
         {/* Brand & Specialty */}
@@ -70,80 +74,97 @@ export const TopNav: React.FC<TopNavProps> = ({
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xs sm:text-sm font-black text-white tracking-wide">
+              <h1 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-wide">
                 EDAN TEPATITLÁN
               </h1>
-              <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-950 text-red-300 border border-red-800">
+              <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800">
                 CRUZ ROJA DELEGACIÓN TEPATITLÁN
               </span>
             </div>
-            <p className="text-[10px] sm:text-[11px] text-slate-400 hidden xs:block truncate max-w-xs md:max-w-md">
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 hidden xs:block truncate max-w-xs md:max-w-md">
               {contingency.name}
             </p>
           </div>
         </div>
 
-        {/* Right Tools & Screen Adaptor Controls */}
+        {/* Right Tools & Theme / Screen Adaptor Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Screen Adaptor Selector Widget (Tablet, Smartphone, PC) */}
-          <div className="relative">
-            <div className="flex items-center gap-0.5 bg-slate-900/95 p-1 rounded-xl border border-slate-700 shadow-md">
-              <button
-                type="button"
-                onClick={() => onSetDeviceViewMode('mobile')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold transition ${
-                  deviceViewMode === 'mobile'
-                    ? 'bg-red-700 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
-                title="Adaptador de pantalla: Smartphone / Móvil"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Móvil</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onSetDeviceViewMode('tablet')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold transition ${
-                  deviceViewMode === 'tablet'
-                    ? 'bg-red-700 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
-                title="Adaptador de pantalla: Tablet"
-              >
-                <Tablet className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Tablet</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onSetDeviceViewMode('desktop')}
-                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold transition ${
-                  deviceViewMode === 'desktop'
-                    ? 'bg-red-700 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
-                title="Adaptador de pantalla: PC / Escritorio"
-              >
-                <Laptop className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">PC</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onSetDeviceViewMode('auto')}
-                className={`px-1.5 py-1 rounded-lg text-[10px] font-bold transition ${
-                  deviceViewMode === 'auto'
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-500 hover:text-slate-300'
-                }`}
-                title="Ajuste de pantalla Automático"
-              >
-                Auto
-              </button>
-            </div>
+          <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-900/95 p-0.5 sm:p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <button
+              type="button"
+              onClick={() => onSetDeviceViewMode('mobile')}
+              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[11px] font-bold transition ${
+                deviceViewMode === 'mobile'
+                  ? 'bg-red-700 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+              title="Adaptador de pantalla: Smartphone / Móvil"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">Móvil</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSetDeviceViewMode('tablet')}
+              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[11px] font-bold transition ${
+                deviceViewMode === 'tablet'
+                  ? 'bg-red-700 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+              title="Adaptador de pantalla: Tablet"
+            >
+              <Tablet className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">Tablet</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSetDeviceViewMode('desktop')}
+              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[11px] font-bold transition ${
+                deviceViewMode === 'desktop'
+                  ? 'bg-red-700 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+              title="Adaptador de pantalla: PC / Escritorio"
+            >
+              <Laptop className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">PC</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSetDeviceViewMode('auto')}
+              className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[11px] font-bold transition ${
+                deviceViewMode === 'auto'
+                  ? 'bg-slate-800 text-white dark:bg-slate-700 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+              title="Adaptador de pantalla: Automático / Completo"
+            >
+              <Maximize2 className="w-3 h-3" />
+              <span className="hidden xl:inline">Auto</span>
+            </button>
           </div>
+
+          {/* Theme Mode Toggle (Blanco / Obscuro) */}
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition shadow-sm bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800/90 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
+            title={theme === 'dark' ? 'Cambiar a Tema Blanco (Claro)' : 'Cambiar a Tema Obscuro'}
+            aria-label="Alternar tema blanco u obscuro"
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden md:inline">Tema Blanco</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-slate-700" />
+                <span className="hidden md:inline">Tema Obscuro</span>
+              </>
+            )}
+          </button>
 
           {/* PWA Install Button */}
           <PWAInstallButton />
@@ -152,30 +173,30 @@ export const TopNav: React.FC<TopNavProps> = ({
           <div
             className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-medium transition ${
               !isOnline
-                ? 'bg-amber-950/70 border-amber-800 text-amber-300'
+                ? 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-950/70 dark:border-amber-800 dark:text-amber-300'
                 : syncStatus === 'syncing'
-                ? 'bg-sky-950/70 border-sky-800 text-sky-300'
-                : 'bg-emerald-950/70 border-emerald-800 text-emerald-300'
+                ? 'bg-sky-100 border-sky-300 text-sky-800 dark:bg-sky-950/70 dark:border-sky-800 dark:text-sky-300'
+                : 'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-950/70 dark:border-emerald-800 dark:text-emerald-300'
             }`}
           >
             {!isOnline ? (
               <>
-                <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+                <WifiOff className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span className="hidden sm:inline">Offline</span>
                 {pendingMutationsCount > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full bg-amber-800 text-[10px] text-white font-bold">
+                  <span className="px-1.5 py-0.2 rounded-full bg-amber-600 dark:bg-amber-800 text-[10px] text-white font-bold">
                     {pendingMutationsCount}
                   </span>
                 )}
               </>
             ) : syncStatus === 'syncing' ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 text-sky-400 animate-spin" />
+                <RefreshCw className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 animate-spin" />
                 <span className="hidden sm:inline">Sincronizando</span>
               </>
             ) : (
               <>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                 <span className="hidden sm:inline">En Línea</span>
               </>
             )}
@@ -185,11 +206,11 @@ export const TopNav: React.FC<TopNavProps> = ({
           <button
             onClick={onForceSync}
             disabled={!isOnline || syncStatus === 'syncing'}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition disabled:opacity-40"
+            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white dark:border-slate-700 transition disabled:opacity-40"
             title="Sincronizar datos con el servidor central de Tepatitlán"
           >
             <RefreshCw
-              className={`w-4 h-4 ${syncStatus === 'syncing' ? 'animate-spin text-sky-400' : ''}`}
+              className={`w-4 h-4 ${syncStatus === 'syncing' ? 'animate-spin text-sky-500' : ''}`}
             />
           </button>
 
@@ -198,12 +219,12 @@ export const TopNav: React.FC<TopNavProps> = ({
             onClick={() => onSelectTab('profile')}
             className={`flex items-center gap-2 p-1.5 px-2 rounded-lg border text-xs transition ${
               currentTab === 'profile'
-                ? 'bg-red-800 text-white border-red-600 shadow-md'
-                : 'bg-slate-800/90 hover:bg-slate-700 border-slate-700 text-slate-200'
+                ? 'bg-red-700 text-white border-red-700 shadow-md'
+                : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 dark:bg-slate-800/90 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-200'
             }`}
             title="Ir al apartado dedicado: Perfil del Evaluador"
           >
-            <div className="w-5 h-5 rounded-full bg-red-800 border border-red-500 text-white flex items-center justify-center text-[10px] font-bold">
+            <div className="w-5 h-5 rounded-full bg-red-700 border border-red-500 text-white flex items-center justify-center text-[10px] font-bold">
               {currentEvaluator.name.charAt(0)}
             </div>
             <span className="hidden md:inline font-semibold truncate max-w-[110px]">
@@ -214,38 +235,13 @@ export const TopNav: React.FC<TopNavProps> = ({
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 border-t border-slate-800/80 overflow-x-auto py-1">
-        <button
-          onClick={() => onSelectTab('map')}
-          className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-            currentTab === 'map'
-              ? 'bg-red-700 text-white shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <MapPin className="w-3.5 h-3.5" />
-          <span>Mapa Interactivo</span>
-        </button>
-
-        <button
-          onClick={() => onSelectTab('matrix')}
-          className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-            currentTab === 'matrix'
-              ? 'bg-red-700 text-white shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
-          title="Ver gráficamente los movimientos y avance secuencial en la matriz EDAN"
-        >
-          <Activity className="w-3.5 h-3.5 text-orange-400" />
-          <span>Matriz de Movimientos</span>
-        </button>
-
+      <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 border-t border-slate-200 dark:border-slate-800/80 overflow-x-auto py-1">
         <button
           onClick={() => onSelectTab('assessments')}
           className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
             currentTab === 'assessments'
               ? 'bg-red-700 text-white shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
@@ -253,28 +249,16 @@ export const TopNav: React.FC<TopNavProps> = ({
         </button>
 
         <button
-          onClick={() => onSelectTab('profile')}
+          onClick={() => onSelectTab('matrix')}
           className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-            currentTab === 'profile'
+            currentTab === 'matrix'
               ? 'bg-red-700 text-white shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
-          title="Apartado exclusivo para crear y editar el Perfil del Evaluador"
+          title="Ver gráficamente los movimientos y avance secuencial en la matriz EDAN"
         >
-          <Users className="w-3.5 h-3.5 text-red-400" />
-          <span>Perfil del Evaluador</span>
-        </button>
-
-        <button
-          onClick={() => onSelectTab('needs')}
-          className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-            currentTab === 'needs'
-              ? 'bg-red-700 text-white shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <Package className="w-3.5 h-3.5" />
-          <span>Análisis de Necesidades</span>
+          <Activity className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" />
+          <span>Matriz de Movimientos</span>
         </button>
 
         <button
@@ -282,7 +266,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
             currentTab === 'routes'
               ? 'bg-red-700 text-white shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
           title="Trazabilidad operativa de evaluaciones EDAN y movimientos en campo"
         >
@@ -291,15 +275,40 @@ export const TopNav: React.FC<TopNavProps> = ({
         </button>
 
         <button
+          onClick={() => onSelectTab('profile')}
+          className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+            currentTab === 'profile'
+              ? 'bg-red-700 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+          }`}
+          title="Apartado exclusivo para crear y editar el Perfil del Evaluador"
+        >
+          <Users className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+          <span>Perfil del Evaluador</span>
+        </button>
+
+        <button
+          onClick={() => onSelectTab('needs')}
+          className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+            currentTab === 'needs'
+              ? 'bg-red-700 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+          }`}
+        >
+          <Package className="w-3.5 h-3.5" />
+          <span>Análisis de Necesidades</span>
+        </button>
+
+        <button
           onClick={() => onSelectTab('backup')}
           className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${
             currentTab === 'backup'
               ? 'bg-red-700 text-white shadow-sm'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
           }`}
         >
-          <Database className="w-3.5 h-3.5" />
-          <span>Copia Offline & Transfer</span>
+          <Database className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+          <span>Respaldo y Transferencia</span>
         </button>
       </div>
     </header>

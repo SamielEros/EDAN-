@@ -14,28 +14,16 @@ import {
   Radio,
 } from 'lucide-react';
 import { DamageAssessment, DamageSeverity, ContingencyEvent } from '../types/edan';
-import { generateGoogleMapsRouteUrl, generateGoogleMapsSingleUrl } from './EDANGoogleMap';
-
-// Haversine formula to compute distance in km
-function computeDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+import {
+  computeDistanceKm,
+  generateGoogleMapsRouteUrl,
+  generateGoogleMapsSingleUrl,
+} from '../utils/geoUtils';
 
 interface RoutesTrackerProps {
   assessments: DamageAssessment[];
   contingency?: ContingencyEvent;
   onSelectAssessment?: (assessment: DamageAssessment) => void;
-  onNavigateToMap?: (assessment: DamageAssessment) => void;
   onDeleteAssessment?: (id: string) => void;
 }
 
@@ -43,7 +31,6 @@ export const RoutesTracker: React.FC<RoutesTrackerProps> = ({
   assessments,
   contingency,
   onSelectAssessment,
-  onNavigateToMap,
   onDeleteAssessment,
 }) => {
   // Filter and sort states for dynamic traceability
@@ -105,60 +92,63 @@ export const RoutesTracker: React.FC<RoutesTrackerProps> = ({
     return total;
   }, [sortedAssessments]);
 
+  // Total affected population across trace
   const totalFamiliesAffected = useMemo(() => {
-    return sortedAssessments.reduce((acc, a) => acc + (a.affectedPopulation?.familiesAffected || 0), 0);
+    return sortedAssessments.reduce(
+      (sum, a) => sum + (a.affectedPopulation?.familiesAffected || 0),
+      0
+    );
   }, [sortedAssessments]);
 
-  const totalInjured = useMemo(() => {
-    return sortedAssessments.reduce((acc, a) => acc + (a.affectedPopulation?.peopleInjured || 0), 0);
-  }, [sortedAssessments]);
-
-  const totalHomesInhabitable = useMemo(() => {
-    return sortedAssessments.reduce((acc, a) => acc + (a.affectedPopulation?.homesInhabitable || 0), 0);
+  const totalInhabitableHomes = useMemo(() => {
+    return sortedAssessments.reduce(
+      (sum, a) => sum + (a.affectedPopulation?.homesInhabitable || 0),
+      0
+    );
   }, [sortedAssessments]);
 
   const getSeverityStyle = (sev: DamageSeverity) => {
     switch (sev) {
       case 'Destrucción Total':
-        return 'bg-red-950 text-red-300 border-red-800';
+        return 'bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-800';
       case 'Grave':
-        return 'bg-orange-950 text-orange-300 border-orange-800';
+        return 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800';
       case 'Moderado':
-        return 'bg-yellow-950 text-yellow-300 border-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-950 dark:text-yellow-300 dark:border-yellow-800';
       default:
-        return 'bg-emerald-950 text-emerald-300 border-emerald-800';
+        return 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800';
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-red-950/40 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-150">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-red-500" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Navigation className="w-5 h-5 text-red-600 dark:text-red-500" />
               <span>Trazabilidad Operativa y Movimientos del Desastre</span>
             </h2>
-            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-[10px] font-bold text-emerald-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               <span>Actualización en Tiempo Real</span>
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Registro dinámico de la trazabilidad conforme surgen evaluaciones EDAN en los diferentes sectores de Tepatitlán.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Registro cronológico y trazabilidad dinámica de evaluaciones EDAN en los sectores de Tepatitlán.
           </p>
         </div>
 
         {/* PMU Indicator Banner */}
         {contingency?.commandPostLocation && (
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-red-950/60 border border-red-800/80 text-xs shrink-0">
-            <div className="p-1.5 rounded-lg bg-red-900 text-red-200">
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800/80 text-xs shrink-0">
+            <div className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200">
               <Radio className="w-4 h-4" />
             </div>
             <div>
-              <div className="font-bold text-white text-[11px]">PUESTO DE MANDO UNIFICADO (PMU)</div>
-              <div className="text-[10px] text-red-300 font-mono">
+              <div className="font-bold text-slate-900 dark:text-white text-[11px]">PUESTO DE MANDO UNIFICADO (PMU)</div>
+              <div className="text-[10px] text-red-700 dark:text-red-300 font-mono">
                 {contingency.commandPostLocation.name}
               </div>
             </div>
@@ -168,126 +158,123 @@ export const RoutesTracker: React.FC<RoutesTrackerProps> = ({
 
       {/* Real-Time Disaster KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-150">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-1">
             <span>Sitios Evaluados</span>
-            <MapPin className="w-4 h-4 text-red-400" />
+            <MapPin className="w-4 h-4 text-red-600 dark:text-red-400" />
           </div>
-          <div className="text-xl font-bold text-white">{sortedAssessments.length}</div>
+          <div className="text-xl font-bold text-slate-900 dark:text-white">{sortedAssessments.length}</div>
           <div className="text-[10px] text-slate-500">Puntos georreferenciados</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-150">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-1">
             <span>Trayectoria Recorrida</span>
-            <Navigation className="w-4 h-4 text-sky-400" />
+            <Navigation className="w-4 h-4 text-sky-600 dark:text-sky-400" />
           </div>
-          <div className="text-xl font-bold text-sky-300">{totalTrajectoryKm.toFixed(2)} km</div>
+          <div className="text-xl font-bold text-sky-700 dark:text-sky-300">{totalTrajectoryKm.toFixed(2)} km</div>
           <div className="text-[10px] text-slate-500">Desplazamiento acumulado</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-150">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-1">
             <span>Familias Afectadas</span>
-            <Users className="w-4 h-4 text-emerald-400" />
+            <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="text-xl font-bold text-emerald-300">{totalFamiliesAffected}</div>
+          <div className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{totalFamiliesAffected}</div>
           <div className="text-[10px] text-slate-500">Censo poblacional</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-150">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-1">
             <span>Viviendas Inhabitables</span>
-            <AlertCircle className="w-4 h-4 text-orange-400" />
+            <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
           </div>
-          <div className="text-xl font-bold text-orange-300">{totalHomesInhabitable}</div>
-          <div className="text-[10px] text-slate-500">Lesionados: {totalInjured}</div>
+          <div className="text-xl font-bold text-orange-700 dark:text-orange-300">{totalInhabitableHomes}</div>
+          <div className="text-[10px] text-slate-500">Riesgo inminente</div>
         </div>
       </div>
 
-      {/* Filter & Action Toolbar */}
-      <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      {/* Control Filters & Multi-site Route Action */}
+      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors duration-150">
         <div className="flex flex-wrap items-center gap-2">
-          {/* Evaluator filter */}
-          <select
-            value={filterEvaluator}
-            onChange={(e) => setFilterEvaluator(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-1 focus:ring-red-500"
-          >
-            <option value="all">Todas las Brigadas / Evaluadores ({uniqueEvaluators.length})</option>
-            {uniqueEvaluators.map((ev) => (
-              <option key={ev} value={ev}>
-                {ev}
-              </option>
-            ))}
-          </select>
+          {/* Filter by Evaluator */}
+          {uniqueEvaluators.length > 0 && (
+            <select
+              value={filterEvaluator}
+              onChange={(e) => setFilterEvaluator(e.target.value)}
+              className="bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-500"
+            >
+              <option value="all">Todos los Evaluadores ({uniqueEvaluators.length})</option>
+              {uniqueEvaluators.map((ev) => (
+                <option key={ev} value={ev}>
+                  {ev}
+                </option>
+              ))}
+            </select>
+          )}
 
-          {/* Sector filter */}
-          <select
-            value={filterSector}
-            onChange={(e) => setFilterSector(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-1 focus:ring-red-500"
-          >
-            <option value="all">Todos los Sectores ({uniqueSectors.length})</option>
-            {uniqueSectors.map((sec) => (
-              <option key={sec} value={sec}>
-                {sec}
-              </option>
-            ))}
-          </select>
+          {/* Filter by Sector */}
+          {uniqueSectors.length > 0 && (
+            <select
+              value={filterSector}
+              onChange={(e) => setFilterSector(e.target.value)}
+              className="bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-500"
+            >
+              <option value="all">Todos los Sectores</option>
+              {uniqueSectors.map((s) => (
+                <option key={s} value={s}>
+                  Sector {s}
+                </option>
+              ))}
+            </select>
+          )}
 
-          {/* Sort order */}
+          {/* Chronological Sort Toggle */}
           <button
-            onClick={() => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
-            title="Cambiar orden cronológico"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition"
           >
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
-            <span>{sortOrder === 'asc' ? 'Cronológico (Inicio → Fin)' : 'Más Reciente Primero'}</span>
+            <Clock className="w-3.5 h-3.5" />
+            <span>{sortOrder === 'asc' ? 'Primero Antiguos (Cronológico)' : 'Primero Recientes'}</span>
           </button>
         </div>
 
-        {/* Google Maps Route Launcher */}
-        {sortedAssessments.length > 1 && (
+        {/* Global Google Maps Route Button */}
+        {sortedAssessments.length > 0 && (
           <a
             href={generateGoogleMapsRouteUrl(sortedAssessments)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-600 font-bold text-white shadow-sm transition active:scale-95"
-            title="Trazar ruta de navegación en Google Maps uniendo todos los sitios"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition active:scale-95 shrink-0"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Navegar Todos los Puntos en Google Maps ({sortedAssessments.length})</span>
+            <Navigation className="w-4 h-4" />
+            <span>Navegar Ruta Completa en Google Maps ({sortedAssessments.length} sitios)</span>
           </a>
         )}
       </div>
 
-      {/* Chronological Traceability Timeline */}
-      <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-            <Activity className="w-4 h-4 text-red-500 animate-pulse" />
-            <span>Secuencia de Sitios de Desastre Evaluados en Campo</span>
-          </h4>
-          <span className="text-[11px] text-slate-400">
-            {sortedAssessments.length} puntos en trazabilidad
-          </span>
-        </div>
-
+      {/* Dynamic Trace Timeline */}
+      <div className="space-y-4">
         {sortedAssessments.length === 0 ? (
-          <div className="text-center py-10 text-slate-400 text-xs">
-            No hay evaluaciones que coincidan con los filtros seleccionados.
+          <div className="p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs space-y-2 shadow-sm transition-colors duration-150">
+            <Activity className="w-8 h-8 text-slate-400 mx-auto" />
+            <p className="font-bold text-sm text-slate-900 dark:text-white">
+              No hay evaluaciones registradas para la trazabilidad
+            </p>
+            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+              Conforme registre evaluaciones de daños EDAN en campo, se formará automáticamente la secuencia temporal y espacial con distancias acumuladas.
+            </p>
           </div>
         ) : (
-          <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-700">
+          <div className="relative pl-6 border-l-2 border-red-500/30 space-y-4 ml-3">
             {sortedAssessments.map((item, idx) => {
-              // Calculate distance from previous item
+              // Calculate step distance from previous node in current display order
               let stepDistance = 0;
               if (idx > 0) {
-                const prev = sortedAssessments[idx - 1];
                 stepDistance = computeDistanceKm(
-                  prev.location.lat,
-                  prev.location.lng,
+                  sortedAssessments[idx - 1].location.lat,
+                  sortedAssessments[idx - 1].location.lng,
                   item.location.lat,
                   item.location.lng
                 );
@@ -301,45 +288,45 @@ export const RoutesTracker: React.FC<RoutesTrackerProps> = ({
               return (
                 <div key={item.id} className="relative group">
                   {/* Node Marker */}
-                  <div className="absolute -left-6 top-1.5 w-5 h-5 rounded-full border-2 border-white bg-red-600 text-white flex items-center justify-center font-bold text-[9px] shadow-sm">
+                  <div className="absolute -left-9 top-1.5 w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 bg-red-600 text-white flex items-center justify-center font-bold text-[10px] shadow-sm">
                     {idx + 1}
                   </div>
 
                   {/* Assessment Card */}
-                  <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition space-y-2.5 shadow-sm">
+                  <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition space-y-3 shadow-sm">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-xs text-white bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                          <span className="font-mono font-bold text-xs text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
                             #{idx + 1} {item.folio}
                           </span>
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getSeverityStyle(
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getSeverityStyle(
                               item.severity
                             )}`}
                           >
                             {item.severity}
                           </span>
-                          <span className="text-xs text-slate-400 font-medium">
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                             &bull; Sector {item.sector}
                           </span>
                         </div>
 
-                        <h4 className="text-sm font-bold text-white mt-1">
-                          {item.location.community} &mdash;{' '}
-                          <span className="text-slate-300 font-normal">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                          {item.location.neighborhood || item.location.community} &mdash;{' '}
+                          <span className="text-slate-600 dark:text-slate-300 font-normal">
                             {item.location.streetAddress}
                           </span>
                         </h4>
                       </div>
 
-                      <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1 text-[11px] text-slate-400 shrink-0">
-                        <span className="flex items-center gap-1 font-mono text-slate-300">
-                          <Clock className="w-3 h-3 text-slate-400" />
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1 text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                        <span className="flex items-center gap-1 font-mono text-slate-700 dark:text-slate-300">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
                           <span>{timeStr} hrs</span>
                         </span>
                         {idx > 0 && (
-                          <span className="text-[10px] text-sky-400 font-semibold bg-sky-950/70 px-1.5 py-0.5 rounded border border-sky-800">
+                          <span className="text-[10px] text-sky-700 dark:text-sky-400 font-semibold bg-sky-50 dark:bg-sky-950/70 px-2 py-0.5 rounded-lg border border-sky-200 dark:border-sky-800">
                             +{stepDistance.toFixed(2)} km desde #{idx}
                           </span>
                         )}
@@ -348,26 +335,27 @@ export const RoutesTracker: React.FC<RoutesTrackerProps> = ({
 
                     {/* Damage & Evaluator Info */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80 text-slate-300">
-                        <div className="text-[10px] text-slate-500 font-bold mb-0.5">
-                          DAÑOS OBSERVADOS
+                      <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800/80">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold block">
+                          EVALUADOR EN TERRENO
+                        </span>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">
+                          {item.evaluator.name}
                         </div>
-                        <p className="line-clamp-2 text-[11px]">{item.damageDescription}</p>
+                        <div className="text-[10px] text-slate-500">
+                          Indicativo: {item.evaluator.radioCallsign} &bull; Cred: {item.evaluator.credential}
+                        </div>
                       </div>
 
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80 text-slate-300 flex flex-col justify-between">
-                        <div className="text-[10px] text-slate-500 font-bold mb-0.5">
-                          EVALUADOR RESPONSABLE
+                      <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800/80">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold block">
+                          RESUMEN DE AFECTACIÓN
+                        </span>
+                        <div className="text-slate-700 dark:text-slate-300 truncate">
+                          {item.damageDescription || 'Evaluación registrada sin observaciones.'}
                         </div>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-200">
-                            {item.evaluator.name}
-                          </span>
-                          <span className="font-mono text-[10px] text-amber-400">
-                            [{item.evaluator.radioCallsign}]
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-slate-400 mt-1 flex gap-2">
+                        <div className="text-[10px] text-slate-500 mt-1 flex gap-2">
+                          <span>Personas: <b>{item.affectedPopulation.peopleAffected || 0}</b></span>
                           <span>Familias: <b>{item.affectedPopulation.familiesAffected}</b></span>
                           <span>Lesionados: <b>{item.affectedPopulation.peopleInjured}</b></span>
                         </div>
@@ -375,34 +363,24 @@ export const RoutesTracker: React.FC<RoutesTrackerProps> = ({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-900 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
                       <div className="flex items-center gap-2">
-                        {onNavigateToMap && (
-                          <button
-                            onClick={() => onNavigateToMap(item)}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-700/80 hover:bg-red-600 text-white font-bold text-[11px] transition"
-                          >
-                            <MapPin className="w-3 h-3" />
-                            <span>Ver en Mapa</span>
-                          </button>
-                        )}
-
                         <a
                           href={generateGoogleMapsSingleUrl(item.location.lat, item.location.lng)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-[11px] border border-slate-700 transition"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 text-blue-700 dark:text-sky-300 font-bold text-[11px] border border-blue-200 dark:border-slate-700 transition"
                         >
-                          <ExternalLink className="w-3 h-3" />
+                          <ExternalLink className="w-3.5 h-3.5 text-blue-600 dark:text-sky-400" />
                           <span>Google Maps GPS</span>
                         </a>
 
                         {onSelectAssessment && (
                           <button
                             onClick={() => onSelectAssessment(item)}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] border border-slate-700 transition"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-300 font-bold text-[11px] border border-slate-200 dark:border-slate-700 transition"
                           >
-                            <FileText className="w-3 h-3 text-red-400" />
+                            <FileText className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                             <span>Reporte EDAN</span>
                           </button>
                         )}
@@ -413,16 +391,16 @@ export const RoutesTracker: React.FC<RoutesTrackerProps> = ({
                           onClick={() => {
                             if (
                               confirm(
-                                `¿Confirma eliminar definitivamente la evaluación ${item.folio} (${item.location.community}) de la trazabilidad y del mapa?`
+                                `¿Confirma eliminar definitivamente la evaluación ${item.folio} (${item.location.community}) de la trazabilidad?`
                               )
                             ) {
                               onDeleteAssessment(item.id);
                             }
                           }}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900 hover:bg-red-950 text-slate-400 hover:text-red-300 text-[11px] border border-slate-800 hover:border-red-800 transition"
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-950 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-300 text-[11px] border border-slate-200 dark:border-slate-700 transition"
                           title="Eliminar registro definitivamente"
                         >
-                          <Trash2 className="w-3 h-3 text-red-500" />
+                          <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-500" />
                           <span>Eliminar</span>
                         </button>
                       )}
