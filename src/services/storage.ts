@@ -407,3 +407,39 @@ export async function importDatabaseBackup(jsonString: string): Promise<number> 
   window.dispatchEvent(new CustomEvent('edan-routes-changed'));
   return count;
 }
+
+/**
+ * Auto-Save Draft Assessment management
+ */
+const DRAFT_STORAGE_KEY = 'edan_draft_assessment';
+
+export async function saveAssessmentDraft(draft: any): Promise<void> {
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ ...draft, savedAt: new Date().toISOString() }));
+    const db = await getDB();
+    await db.put('settings', draft, 'assessment_draft');
+  } catch (err) {
+    console.warn('[Draft Save Warning]', err);
+  }
+}
+
+export async function getAssessmentDraft(): Promise<any | null> {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+    const db = await getDB();
+    return (await db.get('settings', 'assessment_draft')) || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function clearAssessmentDraft(): Promise<void> {
+  try {
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+    const db = await getDB();
+    await db.delete('settings', 'assessment_draft');
+  } catch (err) {
+    console.warn('[Draft Clear Warning]', err);
+  }
+}

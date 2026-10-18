@@ -88,6 +88,7 @@ export interface NeedItem {
 
 export interface AffectedPopulation {
   familiesAffected: number;
+  peopleAffected?: number; // Número de personas afectadas (censo directo)
   peopleInjured: number;
   peopleMissing: number;
   peopleDeceased: number;
@@ -117,6 +118,7 @@ export interface DamageAssessment {
   timestamp: string;
   location: {
     community: string;
+    neighborhood?: string; // Colonia o barrio ingresado manualmente
     streetAddress: string;
     reference: string;
     lat: number;
